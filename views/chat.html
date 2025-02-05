@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Chat Room</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <link rel="stylesheet" href="/chat.css">
+</head>
+<body>
+    <h2>Chat Room</h2>
+    <label for="roomSelect">Choose a room:</label>
+    <select id="roomSelect">
+        <option value="devops">DevOps</option>
+        <option value="cloud computing">Cloud Computing</option>
+        <option value="covid19">COVID-19</option>
+        <option value="sports">Sports</option>
+        <option value="nodeJS">NodeJS</option>
+    </select>
+    <button onclick="joinRoom()">Join</button>
+    <button onclick="leaveRoom()">Leave</button>
+
+    <div id="messages"></div>
+    <input id="messageInput" type="text" placeholder="Type a message">
+    <button onclick="sendMessage()">Send</button>
+
+    <script>
+        const socket = io();
+        let currentRoom = null;
+        let username = localStorage.getItem('username');
+
+        function joinRoom() {
+            currentRoom = $('#roomSelect').val();
+            socket.emit('joinRoom', currentRoom);
+            $('#messages').append(`<p>Joined room: ${currentRoom}</p>`);
+        }
+
+        function leaveRoom() {
+            if (currentRoom) {
+                socket.emit('leaveRoom', currentRoom);
+                $('#messages').append(`<p>Left room: ${currentRoom}</p>`);
+                currentRoom = null;
+            }
+        }
+
+        function sendMessage() {
+            if (currentRoom) {
+                let message = $('#messageInput').val();
+                socket.emit('message', { room: currentRoom, user: username, message });
+                $('#messageInput').val('');
+            }
+        }
+
+        socket.on('message', (data) => {
+            $('#messages').append(`<p><strong>${data.user}:</strong> ${data.message}</p>`);
+        });
+
+        $('#messageInput').on('input', function() {
+            socket.emit('typing', currentRoom);
+        });
+
+        socket.on('typing', (msg) => {
+            console.log(msg);
+        });
+    </script>
+</body>
+</html>

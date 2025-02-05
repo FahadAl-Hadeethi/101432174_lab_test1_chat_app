@@ -1,0 +1,25 @@
+/* Specific styles for login page */
+body {
+    background-color: #e0e0e0;
+    font-family: Arial, sans-serif;
+}
+
+h2 {
+    font-size: 2em;
+    text-align: center;
+}
+
+form input {
+    width: 80%;
+    padding: 10px;
+    margin-bottom: 15px;
+}
+
+form button {
+    padding: 12px;
+    background-color: #3498db;
+    color: white;
+    font-size: 1.1em;
+    border-radius: 5px;
+    cursor: pointer;
+}
