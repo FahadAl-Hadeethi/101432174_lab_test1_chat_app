@@ -1,66 +1,117 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat Room</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <link rel="stylesheet" href="/chat.css">
 </head>
 <body>
-    <h2>Chat Room</h2>
-    <label for="roomSelect">Choose a room:</label>
-    <select id="roomSelect">
-        <option value="devops">DevOps</option>
-        <option value="cloud computing">Cloud Computing</option>
-        <option value="covid19">COVID-19</option>
-        <option value="sports">Sports</option>
-        <option value="nodeJS">NodeJS</option>
-    </select>
-    <button onclick="joinRoom()">Join</button>
-    <button onclick="leaveRoom()">Leave</button>
+    <div class="chat-container">
+        <h2 id="roomName">Chat Room</h2>
+        <p>Username: <span id="usernameDisplay"></span></p>
 
-    <div id="messages"></div>
-    <input id="messageInput" type="text" placeholder="Type a message">
-    <button onclick="sendMessage()">Send</button>
+        <!-- Room and Messages Section -->
+        <div class="room-selection">
+            <p><strong>Joined room: </strong><span id="joinedRoom"></span></p>
+        </div>
+
+        <div id="messages" class="messages-container"></div>
+
+        <!-- Typing Indicator -->
+        <div id="typingIndicator"></div>
+
+        <!-- Message Input Area -->
+        <div class="input-area">
+            <input id="messageInput" type="text" placeholder="Type a message">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+
+        <!-- Leave Button -->
+        <button class="leave-button" onclick="leaveRoom()">Leave Chat</button>
+
+        <!-- Logout Button -->
+        <button class="logout-button" onclick="logout()">Logout</button>
+    </div>
 
     <script>
         const socket = io();
         let currentRoom = null;
         let username = localStorage.getItem('username');
+        let typingTimeout;
 
-        function joinRoom() {
-            currentRoom = $('#roomSelect').val();
-            socket.emit('joinRoom', currentRoom);
-            $('#messages').append(`<p>Joined room: ${currentRoom}</p>`);
+        // Retrieve the room name from URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        currentRoom = urlParams.get('room');
+
+        if (!username) {
+            alert("You must enter a username first.");
+            window.location.href = '/';
+        } else {
+            document.getElementById('usernameDisplay').textContent = username;
+            document.getElementById('joinedRoom').textContent = currentRoom;
+            document.getElementById('roomName').textContent = `${currentRoom} Chat Room`;
         }
 
-        function leaveRoom() {
-            if (currentRoom) {
-                socket.emit('leaveRoom', currentRoom);
-                $('#messages').append(`<p>Left room: ${currentRoom}</p>`);
-                currentRoom = null;
-            }
-        }
+        socket.emit('joinRoom', { room: currentRoom, user: username });
 
         function sendMessage() {
             if (currentRoom) {
                 let message = $('#messageInput').val();
                 socket.emit('message', { room: currentRoom, user: username, message });
                 $('#messageInput').val('');
+                $('#typingIndicator').text('');
             }
         }
 
+        // Listen for previous messages from the server
+        socket.on('previousMessages', (messages) => {
+            messages.forEach(message => {
+                $('#messages').append(`<p><strong>${message.from_user}:</strong> ${message.message}</p>`);
+            });
+        });
+
+        // Listen for incoming messages and display
         socket.on('message', (data) => {
             $('#messages').append(`<p><strong>${data.user}:</strong> ${data.message}</p>`);
         });
 
+        // Emit typing indicator on input
         $('#messageInput').on('input', function() {
-            socket.emit('typing', currentRoom);
+            socket.emit('typing', { room: currentRoom, user: username });
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(() => {
+                socket.emit('typing', { room: currentRoom, user: '' });
+            }, 1000);
         });
 
-        socket.on('typing', (msg) => {
-            console.log(msg);
+        // Show typing indicator with user name
+        socket.on('typing', (data) => {
+            if (data.user && data.user !== username) {
+                $('#typingIndicator').text(`${data.user} is typing...`);
+            } else if (!data.user) {
+                $('#typingIndicator').text('');
+            }
         });
+
+        $('#messageInput').on('blur', function() {
+            socket.emit('typing', { room: currentRoom, user: '' });
+        });
+
+        function leaveRoom() {
+            if (currentRoom) {
+                socket.emit('leaveRoom', { room: currentRoom, user: username });
+                window.location.href = '/room-selection';
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('username');
+            localStorage.removeItem('token');
+            window.location.href = '/'; 
+        }
     </script>
 </body>
 </html>

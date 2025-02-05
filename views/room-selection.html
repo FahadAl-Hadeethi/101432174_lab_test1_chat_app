@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Room</title>
+    <link rel="stylesheet" href="/room-selection.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Select Room</h1>
+
+        <!-- Prompt for Username -->
+        <div>
+            <label for="username">Enter your username:</label>
+            <input type="text" id="username" placeholder="Username" required>
+        </div>
+
+        <!-- Room Selection -->
+        <div>
+            <label for="roomSelect">Choose a room:</label>
+            <select id="roomSelect">
+                <option value="devops">DevOps</option>
+                <option value="cloud computing">Cloud Computing</option>
+                <option value="covid19">COVID-19</option>
+                <option value="sports">Sports</option>
+                <option value="nodeJS">NodeJS</option>
+            </select>
+        </div>
+
+        <button onclick="joinChat()">Join Chat</button>
+    </div>
+
+    <script>
+        function joinChat() {
+            const username = document.getElementById('username').value;
+            const room = document.getElementById('roomSelect').value;
+
+            
+            if (username) {
+                // Store the username in localStorage
+                localStorage.setItem('username', username);
+                
+                // Redirect to the chat page with the selected room
+                window.location.href = `/chat.html?room=${room}`;
+            } else {
+                alert("Please enter a username!");
+            }
+        }
+    </script>
+</body>
+</html>

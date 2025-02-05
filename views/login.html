@@ -4,7 +4,6 @@
     <title>Login</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link rel="stylesheet" href="/login.css">
-
 </head>
 <body>
     <h2>Login</h2>
@@ -28,8 +27,8 @@
             if (data.token) {
                 localStorage.setItem('token', data.token);
                 localStorage.setItem('username', data.username);
-                alert("Login successful! Redirecting to chat.");
-                window.location.href = "chat.html";
+                alert("Login successful! Redirecting to room selection.");
+                window.location.href = "room-selection.html";  
             } else {
                 alert("Login failed. Check your credentials.");
             }
